@@ -22,9 +22,17 @@ const Header = () => {
             <Link to="/" className="text-foreground hover:text-primary transition-colors">
               Home
             </Link>
+            <Link to="/about" className="text-foreground hover:text-primary transition-colors">
+              About
+            </Link>
             <Link to="/products" className="text-foreground hover:text-primary transition-colors">
               Products
             </Link>
+            {user && (
+              <Link to="/profile" className="text-foreground hover:text-primary transition-colors">
+                Profile
+              </Link>
+            )}
             {userRole === 'admin' && (
               <Link to="/admin" className="text-foreground hover:text-primary transition-colors">
                 Admin
@@ -34,10 +42,10 @@ const Header = () => {
 
           {/* Right Actions */}
           <div className="flex items-center space-x-4">
-            {/* Search */}
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <Search className="h-5 w-5" />
-            </Button>
+            {/* Search - will be replaced by SearchBar component */}
+            <div className="hidden lg:block w-64">
+              {/* Search component will be added to Index page */}
+            </div>
 
             {/* User Account */}
             {user ? (

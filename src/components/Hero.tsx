@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Star } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
@@ -30,15 +31,15 @@ const Hero = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button asChild size="lg" variant="secondary" className="btn-shadow group">
-                <a href="/products">
+                <Link to="/products">
                   Shop Now
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </a>
+                </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
-                <a href="/products">
-                  View Collections
-                </a>
+                <Link to="/about">
+                  Learn More
+                </Link>
               </Button>
             </div>
           </div>

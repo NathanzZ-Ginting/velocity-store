@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, ShoppingCart, Heart } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface ProductCardProps {
   id: string;
@@ -28,12 +29,13 @@ const ProductCard = ({
   return (
     <div className="group card-gradient rounded-xl border shadow-sm card-hover overflow-hidden">
       {/* Image Section */}
-      <div className="relative aspect-square overflow-hidden">
-        <img
-          src={image}
-          alt={name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+      <Link to={`/product/${id}`}>
+        <div className="relative aspect-square overflow-hidden">
+          <img
+            src={image}
+            alt={name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
         
         {/* Badges */}
         <div className="absolute top-3 left-3 flex gap-2">
@@ -66,13 +68,16 @@ const ProductCard = ({
             Add to Cart
           </Button>
         </div>
-      </div>
+        </div>
+      </Link>
 
       {/* Content Section */}
       <div className="p-4">
-        <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-          {name}
-        </h3>
+        <Link to={`/product/${id}`}>
+          <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+            {name}
+          </h3>
+        </Link>
         
         {/* Rating */}
         <div className="flex items-center gap-2 mb-3">
