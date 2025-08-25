@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, ShoppingCart, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useCart } from "@/hooks/useCart";
 
 interface ProductCardProps {
   id: string;
@@ -26,6 +27,13 @@ const ProductCard = ({
   isOnSale = false, 
   inStock 
 }: ProductCardProps) => {
+  const { addToCart } = useCart();
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await addToCart(id);
+  };
   return (
     <div className="group card-gradient rounded-xl border shadow-sm card-hover overflow-hidden">
       {/* Image Section */}
@@ -63,6 +71,7 @@ const ProductCard = ({
           <Button 
             className="w-full btn-shadow" 
             disabled={!inStock}
+            onClick={handleAddToCart}
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
             Add to Cart

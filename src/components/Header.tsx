@@ -1,8 +1,9 @@
-import { ShoppingCart, Search, User, Menu, LogOut } from "lucide-react";
+import { ShoppingCart as ShoppingCartIcon, Search, User, Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import ShoppingCart from "@/components/ShoppingCart";
 
 const Header = () => {
   const { user, userRole, signOut } = useAuth();
@@ -28,11 +29,6 @@ const Header = () => {
             <Link to="/products" className="text-foreground hover:text-primary transition-colors">
               Products
             </Link>
-            {user && (
-              <Link to="/profile" className="text-foreground hover:text-primary transition-colors">
-                Profile
-              </Link>
-            )}
             {userRole === 'admin' && (
               <Link to="/admin" className="text-foreground hover:text-primary transition-colors">
                 Admin
@@ -47,13 +43,25 @@ const Header = () => {
               {/* Search component will be added to Index page */}
             </div>
 
+            {/* Shopping Cart */}
+            <ShoppingCart>
+              <Button variant="ghost" size="icon" className="relative">
+                <ShoppingCartIcon className="h-5 w-5" />
+                <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-primary text-primary-foreground">
+                  0
+                </Badge>
+              </Button>
+            </ShoppingCart>
+
             {/* User Account */}
             {user ? (
-              <div className="hidden sm:flex items-center space-x-2">
-                <span className="text-sm text-muted-foreground">
-                  {user.email}
-                </span>
-                <Button variant="ghost" size="icon" onClick={signOut}>
+              <div className="flex items-center space-x-2">
+                <Link to="/profile">
+                  <Button variant="ghost" size="icon">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="icon" onClick={signOut} className="hidden sm:flex">
                   <LogOut className="h-5 w-5" />
                 </Button>
               </div>
@@ -64,14 +72,6 @@ const Header = () => {
                 </Button>
               </Link>
             )}
-
-            {/* Shopping Cart */}
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-primary text-primary-foreground">
-                0
-              </Badge>
-            </Button>
 
             {/* Mobile Menu */}
             <Button variant="ghost" size="icon" className="md:hidden">

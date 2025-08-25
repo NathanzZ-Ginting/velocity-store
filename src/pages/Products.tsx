@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
@@ -7,85 +7,24 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, SlidersHorizontal, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock products data
-const allProducts = [
-  {
-    id: "1",
-    name: "Premium Wireless Headphones",
-    price: 299.99,
-    originalPrice: 349.99,
-    rating: 4.8,
-    reviews: 324,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
-    isOnSale: true,
-    inStock: true,
-    category: "audio"
-  },
-  {
-    id: "2",
-    name: "Smart Fitness Watch",
-    price: 199.99,
-    rating: 4.6,
-    reviews: 156,
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
-    inStock: true,
-    category: "wearables"
-  },
-  {
-    id: "3",
-    name: "Ultra-Slim Laptop",
-    price: 1299.99,
-    originalPrice: 1499.99,
-    rating: 4.9,
-    reviews: 89,
-    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&h=500&fit=crop",
-    isOnSale: true,
-    inStock: true,
-    category: "computers"
-  },
-  {
-    id: "4",
-    name: "Professional Camera",
-    price: 899.99,
-    rating: 4.7,
-    reviews: 203,
-    image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500&h=500&fit=crop",
-    inStock: false,
-    category: "photography"
-  },
-  {
-    id: "5",
-    name: "Wireless Earbuds Pro",
-    price: 179.99,
-    rating: 4.5,
-    reviews: 412,
-    image: "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=500&h=500&fit=crop",
-    inStock: true,
-    category: "audio"
-  },
-  {
-    id: "6",
-    name: "Gaming Mechanical Keyboard",
-    price: 149.99,
-    originalPrice: 199.99,
-    rating: 4.7,
-    reviews: 267,
-    image: "https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=500&h=500&fit=crop",
-    isOnSale: true,
-    inStock: true,
-    category: "electronics"
-  }
-];
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image_urls: string[];
+  stock: number;
+  category_id?: string;
+  categories?: {
+    name: string;
+  };
+}
 
-const categories = [
-  { value: "all", label: "All Categories" },
-  { value: "electronics", label: "Electronics" },
-  { value: "audio", label: "Audio" },
-  { value: "computers", label: "Computers" },
-  { value: "photography", label: "Photography" },
-  { value: "wearables", label: "Wearables" }
-];
+interface Category {
+  id: string;
+  name: string;
+}
 
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -93,10 +32,57 @@ const Products = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [priceRange, setPriceRange] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredProducts = allProducts.filter(product => {
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          id,
+          name,
+          price,
+          image_urls,
+          stock,
+          category_id,
+          categories (
+            name
+          )
+        `)
+        .eq('is_active', true);
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
+    const matchesCategory = selectedCategory === "all" || product.category_id === selectedCategory;
     
     let matchesPrice = true;
     if (priceRange === "under-200") matchesPrice = product.price < 200;
@@ -108,7 +94,7 @@ const Products = () => {
   });
 
   const activeFilters = [
-    selectedCategory !== "all" && { type: "category", value: selectedCategory, label: categories.find(c => c.value === selectedCategory)?.label },
+    selectedCategory !== "all" && { type: "category", value: selectedCategory, label: categories.find(c => c.id === selectedCategory)?.name },
     priceRange !== "all" && { type: "price", value: priceRange, label: `Price: ${priceRange.replace("-", " - $")}` }
   ].filter(Boolean);
 
@@ -147,9 +133,10 @@ const Products = () => {
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {categories.map(category => (
-                      <SelectItem key={category.value} value={category.value}>
-                        {category.label}
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -220,22 +207,34 @@ const Products = () => {
           {/* Results Count */}
           <div className="mb-6">
             <p className="text-muted-foreground">
-              Showing {filteredProducts.length} of {allProducts.length} products
+              Showing {filteredProducts.length} of {products.length} products
             </p>
           </div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product, index) => (
-              <div 
-                key={product.id}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <ProductCard {...product} />
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">Loading products...</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProducts.map((product, index) => (
+                <div 
+                  key={product.id}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <ProductCard 
+                    id={product.id}
+                    name={product.name}
+                    price={product.price}
+                    rating={4.5}
+                    reviews={0}
+                    image={product.image_urls[0] || "/placeholder.svg"}
+                    inStock={product.stock > 0}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* No Results */}
           {filteredProducts.length === 0 && (
