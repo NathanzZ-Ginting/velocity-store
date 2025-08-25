@@ -2,41 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Modern E-commerce Design System - All colors, gradients, fonts, etc defined here. 
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 216 84% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 216 84% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 216 84% 8%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 216 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 216 100% 70%;
+    --primary-dark: 216 100% 30%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 216 84% 8%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 38 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --accent-light: 38 100% 70%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 216 100% 50%;
 
-    --radius: 0.5rem;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --radius: 0.75rem;
+
+    /* E-commerce specific colors */
+    --price: 142 76% 36%;
+    --sale: 0 84% 60%;
+    --stock-low: 38 92% 50%;
+    --stock-out: 0 84% 60%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(216 100% 50%), hsl(216 100% 70%));
+    --gradient-secondary: linear-gradient(135deg, hsl(210 40% 96%), hsl(220 13% 91%));
+    --gradient-hero: linear-gradient(135deg, hsl(216 100% 50%), hsl(38 100% 50%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 40% 98%));
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(216 100% 50% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(216 100% 50% / 0.1), 0 2px 4px -1px hsl(216 100% 50% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(216 100% 50% / 0.1), 0 4px 6px -2px hsl(216 100% 50% / 0.05);
+    --shadow-glow: 0 0 20px hsl(216 100% 50% / 0.3);
+
+    /* Animations */
+    --transition-base: all 0.2s ease-in-out;
+    --transition-slow: all 0.3s ease-in-out;
 
     --sidebar-background: 0 0% 98%;
 
@@ -100,6 +131,47 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+  
+  .card-gradient {
+    background: var(--gradient-card);
+  }
+  
+  .primary-gradient {
+    background: var(--gradient-primary);
+  }
+  
+  .btn-shadow {
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-base);
+  }
+  
+  .btn-shadow:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+  }
+  
+  .card-hover {
+    transition: var(--transition-base);
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .glow {
+    box-shadow: var(--shadow-glow);
   }
 }
