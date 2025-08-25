@@ -51,6 +51,7 @@ const Profile = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [authorizationError, setAuthorizationError] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
@@ -61,22 +62,42 @@ const Profile = () => {
   });
 
   useEffect(() => {
-    if (user) {
-      fetchProfile();
-      fetchWishlist();
-      fetchOrders();
+    // Enhanced authorization check: Ensure user is properly authenticated
+    if (!user?.id) {
+      setAuthorizationError(true);
+      setLoading(false);
+      return;
     }
+
+    // User is authenticated, proceed with data fetching
+    fetchProfile();
+    fetchWishlist();
+    fetchOrders();
   }, [user]);
 
   const fetchProfile = async () => {
+    // Additional authorization check before making database request
+    if (!user?.id) {
+      setAuthorizationError(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
+        .eq('id', user.id) // Explicitly use user.id (not user?.id) since we've validated it exists
         .single();
 
       if (error) throw error;
+
+      // Verify that the returned profile belongs to the authenticated user
+      if (data && data.id !== user.id) {
+        console.error('Authorization error: Profile ID mismatch');
+        setAuthorizationError(true);
+        return;
+      }
 
       setProfile(data);
       setFormData({
@@ -89,12 +110,21 @@ const Profile = () => {
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
+      // Check if error is related to authorization
+      if (error && typeof error === 'object' && 'code' in error) {
+        const dbError = error as { code?: string; message?: string };
+        if (dbError.code === 'PGRST116' || dbError.message?.includes('permission')) {
+          setAuthorizationError(true);
+        }
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const fetchWishlist = async () => {
+    if (!user?.id) return;
+    
     try {
       const { data, error } = await supabase
         .from('wishlist')
@@ -108,7 +138,7 @@ const Profile = () => {
             stock
           )
         `)
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -120,11 +150,13 @@ const Profile = () => {
   };
 
   const fetchOrders = async () => {
+    if (!user?.id) return;
+    
     try {
       const { data, error } = await supabase
         .from('orders')
         .select('id, total_price, status, created_at')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -135,7 +167,35 @@ const Profile = () => {
   };
 
   const updateProfile = async () => {
-    if (!user || !profile) return;
+    // Enhanced authorization checks before updating
+    if (!user?.id) {
+      toast({
+        title: "Authorization Error",
+        description: "You must be logged in to update your profile.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!profile) {
+      toast({
+        title: "Error",
+        description: "Profile data not loaded.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verify that the profile being updated belongs to the authenticated user
+    if (profile.id !== user.id) {
+      toast({
+        title: "Authorization Error",
+        description: "You can only edit your own profile.",
+        variant: "destructive",
+      });
+      console.error('Authorization error: Attempted to update profile for different user');
+      return;
+    }
 
     setUpdating(true);
     try {
@@ -149,7 +209,13 @@ const Profile = () => {
         })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        // Check for authorization-related errors
+        if (error.code === 'PGRST116' || error.message?.includes('permission')) {
+          throw new Error('You do not have permission to update this profile.');
+        }
+        throw error;
+      }
 
       toast({
         title: "Profile Updated",
@@ -170,11 +236,20 @@ const Profile = () => {
   };
 
   const removeFromWishlist = async (productId: string) => {
+    if (!user?.id) {
+      toast({
+        title: "Authorization Error",
+        description: "You must be logged in to modify your wishlist.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('wishlist')
         .delete()
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .eq('product_id', productId);
 
       if (error) throw error;
@@ -194,6 +269,25 @@ const Profile = () => {
       });
     }
   };
+
+  // Handle authorization errors
+  if (authorizationError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-muted-foreground mb-4">
+            You do not have permission to access this profile.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Please make sure you are logged in and accessing your own profile.
+          </p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
